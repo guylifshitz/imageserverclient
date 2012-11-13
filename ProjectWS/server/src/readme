@@ -1,0 +1,7 @@
+These are TCP/UDP client/server simple applications which
+could be used over IPv4 and IPv6 networks.
+
+Daytime port is number 13, instead of this one we use 13111.
+
+Comments are welcome, eva@dit.upm.es.
+
