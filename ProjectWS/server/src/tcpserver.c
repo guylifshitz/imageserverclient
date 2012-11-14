@@ -54,11 +54,18 @@ main(int argc, char *argv[])
         printf("Received request from host=[%s] port=[%s]\n",
                clienthost, clientservice);
 
-        /* process daytime request from a client */
-        memset(timeStr, 0, sizeof(timeStr));
-        time(&now);
-        sprintf(timeStr, "%s", ctime(&now));
-        write(connfd, timeStr, strlen(timeStr));
+        int iter = 0;
+        while(iter < 100000)
+        {
+            /* process daytime request from a client */
+            memset(timeStr, 0, sizeof(timeStr));
+            time(&now);
+            sprintf(timeStr, "%s %d", ctime(&now), iter);
+
+        	iter ++;
+
+        	write(connfd, timeStr, strlen(timeStr));
+        }
         close(connfd);
     }
 

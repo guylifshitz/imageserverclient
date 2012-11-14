@@ -7,40 +7,36 @@
 
 #include "connect_client.h"
 
-const char *DAYTIME_PORT="13111";
+const char *DAYTIME_PORT = "13111";
 
+int main(int argc, char *argv[]) {
+	int connfd;
+	char *myhost;
+	char timeStr[256];
 
-int
-main(int argc, char *argv[])
-{
-    int connfd;
-    char *myhost;
-    char timeStr[256];
+	int iter = 0;
+	while (iter < 100) {
+		iter ++;
+		myhost = "localhost";
+		if (argc > 1)
+			myhost = argv[1];
 
-    myhost = "localhost";
-    if (argc > 1)
-        myhost = argv[1];
+//    DAYTIME_PORT = DAYTIME_PORT;
+		connfd = connect_client(myhost, DAYTIME_PORT, AF_UNSPEC, SOCK_STREAM);
 
-    connfd = connect_client(myhost, DAYTIME_PORT, AF_UNSPEC, SOCK_STREAM);
+		if (connfd < 0) {
+			fprintf(stderr, "client error:: could not create connected socket "
+					"socket\n");
+			return -1;
+		}
 
-    if (connfd < 0) {
-         fprintf(stderr,
-                 "client error:: could not create connected socket "
-                 "socket\n");
-         return -1;
-    }
+		memset(timeStr, 0, sizeof(timeStr));
 
-    memset(timeStr, 0, sizeof(timeStr));
+		while (read(connfd, timeStr, sizeof(timeStr)) > 0)
+			printf("Out: %s \n", timeStr);
 
-    while (read(connfd, timeStr, sizeof(timeStr)) > 0) 
-        printf("Out: %s", timeStr);
-
-    close(connfd);
-
-    return 0;
+		close(connfd);
+	}
+	return 0;
 }
-
-
-
-
 
