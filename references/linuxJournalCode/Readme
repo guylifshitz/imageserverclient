@@ -1,0 +1,22 @@
+The ZIP contains four web servers in C:
+
+  -- iterative_server.c ;; no concurrency
+  -- forking_server.c   ;; concurrency via multiprocessing
+  -- threading_server.c ;; concurrency via multithreading
+  -- polling_server.c   ;; concurrency via evented-I/O
+
+The iterative_server is not discussed in the Linux Journal article but is included for contrast.
+
+The servers are not production grade; rather, they are illustrations of three ways to concurrency.
+
+The threading_server requires the pthread library and the polling_server requires the epoll library;
+hence, these servers will not compile/link on platforms that lack these libraries.
+
+There's a Makefile. At the command prompt,
+
+   make
+
+generates the executables.
+
+-- Marty Kalin
+   kalin@cs.depaul.edu
