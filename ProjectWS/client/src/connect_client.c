@@ -3,11 +3,12 @@
 #include <netdb.h>
 #include <stdio.h>
 
-
 #include "connect_client.h"
 
+
+
 int 
-connect_client (const char *hostname, 
+connect_client (const char *hostname,
                 const char *service, 
                 int         family, 
                 int         socktype)

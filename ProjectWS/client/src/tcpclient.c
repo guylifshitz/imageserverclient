@@ -8,8 +8,8 @@
 
 #include "connect_client.h"
 
-const char *DAYTIME_PORT = "13111";
-#define NTHREADS 2
+const char *DAYTIME_PORT = "3000";
+#define NTHREADS 20
 
 
 void * create_client(){
