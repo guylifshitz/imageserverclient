@@ -9,7 +9,6 @@
 
 int 
 connect_client (const char *hostname,
-                const char *service, 
                 int         family, 
                 int         socktype)
 {
