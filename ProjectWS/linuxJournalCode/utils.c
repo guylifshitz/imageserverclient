@@ -58,5 +58,43 @@ void generate_echo_response(char request[ ], char response[ ]) {
   strcat(response, "Content-Type: text/*\n");
   strcat(response, "Accept-Ranges: bytes\n"); 
   strcat(response, "Connection: close\n\n");
-  strcat(response, request);
+  strcat(response, "df fdsfjdslkf jdslkfjsdlkdjslkf ldksfu");
+//  strcat(response, request);
 }
+
+void generate_image_response(char request[ ], char response[ ]) {
+	  fprintf(stderr,"test image 1  \n");
+  strcpy(response, "HTTP/1.1 200 OK\n");
+  strcat(response, "Content-Type: image/jpeg/\n");
+  strcat(response, "Accept-Ranges: bytes\n");
+//  strcat(response, "Connection: close\n\n");
+  strcat(response, request);
+//  strcat(response, "4352 ifjsodfsdoif usd89fuds89uf9duf89sf4352 ifjsodfsdoif usd89fuds89uf9duf89sf4352 ");
+
+  fprintf(stderr, "Response to send is: %s \n", response);
+}
+
+
+int ae_load_file_to_memory(const char *filename, char **result)
+{
+	int size = 0;
+	FILE *f = fopen(filename, "rb");
+	if (f == NULL)
+	{
+		*result = NULL;
+		return -1; // -1 means file opening fail
+	}
+	fseek(f, 0, SEEK_END);
+	size = ftell(f);
+	fseek(f, 0, SEEK_SET);
+	*result = (char *)malloc(size+1);
+	if (size != fread(*result, sizeof(char), size, f))
+	{
+		free(*result);
+		return -2; // -2 means file reading fail
+	}
+	fclose(f);
+	(*result)[size] = 0;
+	return size;
+}
+

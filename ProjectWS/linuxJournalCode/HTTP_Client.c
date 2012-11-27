@@ -78,20 +78,16 @@ int main(int argc, char **argv) {
 	memset(buf, 0, sizeof(buf));
 	int htmlstart = 0;
 	char * htmlcontent;
-	fprintf(stderr, "Recieve a page 2 \n");
 	while ((tmpres = recv(sock, buf, BUFSIZ, 0)) > 0) {
-		fprintf(stderr, "Recieve a page 3 \n");
 		if (htmlstart == 0) {
 			/* Under certain conditions this will not work.
 			 * If the \r\n\r\n part is splitted into two messages
 			 * it will fail to detect the beginning of HTML content
 			 */
-			fprintf(stderr, "Recieve a page 4 \n");
-			fprintf(stderr, "Recieve a page 4.1 %s  \n", buf);
+			fprintf(stderr, "Recieve a page %s  \n", buf);
 
 			htmlcontent = strstr(buf, "\r\n\r\n");
 			if (htmlcontent != NULL ) {
-				fprintf(stderr, "Recieve a page 5 \n");
 				htmlstart = 1;
 				htmlcontent += 4;
 			}
