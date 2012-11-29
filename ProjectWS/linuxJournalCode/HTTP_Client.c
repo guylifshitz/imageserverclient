@@ -58,6 +58,7 @@ int main(int argc, char **argv) {
 	if (connect(sock, (struct sockaddr *) remote, sizeof(struct sockaddr))
 			< 0) {
 		perror("Could not connect");
+		sleep(2);
 		exit(1);
 	}
 	get = build_get_query(host, page);
@@ -79,6 +80,8 @@ int main(int argc, char **argv) {
 	int htmlstart = 0;
 	char * htmlcontent;
 	while ((tmpres = recv(sock, buf, BUFSIZ, 0)) > 0) {
+//	while (read(sock, buf, sizeof(buf)) > 0){
+//	while ((tmpres = recv(sock, buf, BUFSIZ, 0)) > 0) {
 		if (htmlstart == 0) {
 			/* Under certain conditions this will not work.
 			 * If the \r\n\r\n part is splitted into two messages
@@ -109,6 +112,8 @@ int main(int argc, char **argv) {
 	free(remote);
 	free(ip);
 	close(sock);
+
+	sleep(5);
 	return 0;
 }
 
@@ -123,6 +128,9 @@ int create_tcp_socket() {
 	int sock;
 	if ((sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
 		perror("Can't create TCP socket");
+
+		sleep(5);
+
 		exit(1);
 	}
 	return sock;
