@@ -10,6 +10,7 @@
 int create_tcp_socket();
 char *get_ip(char *host);
 char *build_get_query(char *host, char *page);
+char *generate_close_message();
 void usage();
 
 #define HOST "localhost"
@@ -56,6 +57,24 @@ void send_request_on_time(void * vp) {
 			free(get);
 		}
 	}
+
+	// SEND CLOSE ON end
+	char *close = generate_close_message();
+	fprintf(stderr, "Send Query:\n<<START>>\n%s<<END>>\n", close);
+
+	//Send the query to the server
+	int sent = 0;
+	int tmpres;
+	while (sent < strlen(close)) {
+		tmpres = send(sock, close + sent, strlen(close) - sent, 0);
+		if (tmpres == -1) {
+			perror("Can't send close query");
+			exit(1);
+		}
+		sent += tmpres;
+	}
+
+
 }
 
 int main(int argc, char **argv) {
@@ -75,7 +94,7 @@ int main(int argc, char **argv) {
 			int i = 2;
 
 			while (i < argc) {
-				times[i-2] = atoi(argv[i]);
+				times[i - 2] = atoi(argv[i]);
 				fprintf(stderr, "times[i]   %i \n", times[i]);
 				i++;
 				maxImageCount++;
@@ -136,7 +155,7 @@ int main(int argc, char **argv) {
 			 * If the \r\n\r\n part is splitted into two messages
 			 * it will fail to detect the beginning of HTML content
 			 */
-			//			fprintf(stderr, "Receive a page %s  \n", buf);
+			fprintf(stderr, "Receive a page %s  \n", buf);
 			messageContent = strstr(buf, "\r\n\r\n");
 			if (messageContent != NULL ) {
 				htmlstart = 1;
@@ -146,13 +165,12 @@ int main(int argc, char **argv) {
 			messageContent = buf;
 		}
 		if (htmlstart) {
-			fprintf(stdout, messageContent);
+//			fprintf(stdout, messageContent);
 		}
 
 		memset(buf, 0, tmpres);
 	}
 	fprintf(stderr, "HTML content %s \n", messageContent);
-	fprintf(stderr, "Something \n");
 	if (tmpres < 0) {
 		perror("Error receiving data");
 	}
@@ -160,7 +178,7 @@ int main(int argc, char **argv) {
 	free(ip);
 	close(sock);
 
-	sleep(5);
+	sleep(1);
 	return 0;
 }
 
@@ -215,3 +233,9 @@ char *build_get_query(char *host, char *page) {
 	sprintf(query, tpl, getpage, host, USERAGENT);
 	return query;
 }
+
+char *generate_close_message() {
+	char *query = "HTTP/1.1 200 OK\nContent-Type: text/*\nAccept-Ranges: bytes\nConnection: close\n\n";
+	return query;
+}
+

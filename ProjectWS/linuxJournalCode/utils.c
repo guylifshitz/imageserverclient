@@ -55,7 +55,7 @@ void generate_echo_response(char request[ ], char response[ ]) {
   strcpy(response, "HTTP/1.1 200 OK\n");        
   strcat(response, "Content-Type: text/*\n");
   strcat(response, "Accept-Ranges: bytes\n"); 
-  strcat(response, "Connection: close\n\n");
+//  strcat(response, "Connection: close\n\n");
   strcat(response, "df fdsfjdslkf jdslkfjsdlkdjslkf ldksfu");
 //  strcat(response, request);
 }
