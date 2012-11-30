@@ -1,7 +1,3 @@
-
-
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -9,6 +5,7 @@
 #include <signal.h>
 #include <pthread.h>
 #include "utils.h"
+#define PORT 3000
 
 char *image_1;
 int image_1_size;
@@ -84,9 +81,16 @@ int load_images()
 	return 0;
 }
 
-int main() {  
-  char buffer[BUFF_SIZE + 1];      
-  
+int main(int argc, char **argv) {
+
+	int port = PORT;
+
+	if(argc ==2 ){
+		port = atoi(argv[1]);
+	 }
+
+	char buffer[BUFF_SIZE + 1];
+
   // load images
   load_images();
 
@@ -94,7 +98,7 @@ int main() {
   socklen_t len = sizeof(struct sockaddr_in);
 
   /* listening socket */
-  int sock = create_server_socket(false);
+  int sock = create_server_socket(false, port);
 
   /* connections */
   while (true) {

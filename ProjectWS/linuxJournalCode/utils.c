@@ -15,9 +15,7 @@ void error_msg(const char* msg, bool halt_flag) {
 }
 
 /* listening socket */
-int create_server_socket(bool non_blocking) {
-  /* Modify as needed. */
-  const int port = 3000;  
+int create_server_socket(bool non_blocking, int port) {
   
   struct sockaddr_in server_addr;
   

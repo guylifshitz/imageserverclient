@@ -3,7 +3,7 @@ all: clients
 clients: HTTP_Client 
 
 HTTP_Client: HTTP_Client.c 
-	gcc -o HTTP_Client HTTP_Client.c
+	gcc -o HTTP_Client HTTP_Client.c -lpthread -lrt -I.
 
 all: servers
 

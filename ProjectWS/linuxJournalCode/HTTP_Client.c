@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <netdb.h>
 #include <string.h>
+#include <time.h>
+#include <pthread.h>
+
 int create_tcp_socket();
 char *get_ip(char *host);
 char *build_get_query(char *host, char *page);
@@ -14,35 +17,78 @@ void usage();
 #define PORT 3000
 #define USERAGENT "HTMLGET 1.0"
 
+int sentImageCount;
+int maxImageCount;
+struct timespec lastSendTime;
+int sock;
+char *host;
+char *page;
+char times[100];
+
+void send_request_on_time(void * vp) {
+	while (sentImageCount < maxImageCount) {
+
+		struct timespec currentTime;
+		clock_gettime(CLOCK_MONOTONIC, &currentTime);
+		uint64_t secondsElapsed = currentTime.tv_sec - lastSendTime.tv_sec;
+
+		// Only send if timer says so.
+		if (secondsElapsed > times[sentImageCount]) {
+			clock_gettime(CLOCK_MONOTONIC, &lastSendTime);
+			sentImageCount++;
+
+			// Build the query
+			char *get = build_get_query(host, page);
+			fprintf(stderr, "Send Query:\n<<START>>\n%s<<END>>\n", get);
+
+			//Send the query to the server
+			int sent = 0;
+			int tmpres;
+			while (sent < strlen(get)) {
+				tmpres = send(sock, get + sent, strlen(get) - sent, 0);
+				if (tmpres == -1) {
+					perror("Can't send query");
+					exit(1);
+				}
+				sent += tmpres;
+			}
+
+			free(get);
+		}
+	}
+}
+
 int main(int argc, char **argv) {
 	struct sockaddr_in *remote;
-	int sock;
 	int tmpres;
 	char *ip;
-	char *get;
 	char buf[BUFSIZ + 1];
-	char *host;
-	char *page;
 
-	/*  if(argc == 1){
-	 usage();
-	 exit(2);
-	 }
-	 host = argv[1];
-	 if(argc > 2){
-	 page = argv[2];
-	 }else{
-	 page = PAGE;
-	 }*/
+	int port = PORT;
+
+	if (argc > 1) {
+		// Read the port number
+		port = atoi(argv[1]);
+
+		// read the times
+		if (argc > 2) {
+			int i = 2;
+
+			while (i < argc) {
+				times[i-2] = atoi(argv[i]);
+				fprintf(stderr, "times[i]   %i \n", times[i]);
+				i++;
+				maxImageCount++;
+			}
+		}
+	}
+
 	host = HOST;
 	page = PAGE;
-
-	fprintf(stderr, "  Create socket  ");
 
 	sock = create_tcp_socket();
 	ip = get_ip(host);
 
-	fprintf(stderr, "IP is %s\n", ip);
 	remote = (struct sockaddr_in *) malloc(sizeof(struct sockaddr_in *));
 	remote->sin_family = AF_INET;
 	tmpres = inet_pton(AF_INET, ip, (void *) (&(remote->sin_addr.s_addr)));
@@ -53,62 +99,63 @@ int main(int argc, char **argv) {
 		fprintf(stderr, "%s is not a valid IP address\n", ip);
 		exit(1);
 	}
-	remote->sin_port = htons(PORT);
+	remote->sin_port = htons(port);
 
+	// CONNECT
 	if (connect(sock, (struct sockaddr *) remote, sizeof(struct sockaddr))
 			< 0) {
 		perror("Could not connect");
 		sleep(2);
 		exit(1);
 	}
-	get = build_get_query(host, page);
-	fprintf(stderr, "Query is:\n<<START>>\n%s<<END>>\n", get);
 
-	//Send the query to the server
-	int sent = 0;
-	while (sent < strlen(get)) {
-		tmpres = send(sock, get + sent, strlen(get) - sent, 0);
-		if (tmpres == -1) {
-			perror("Can't send query");
-			exit(1);
-		}
-		sent += tmpres;
+	// SEND stuff
+
+	// clock
+	sentImageCount = 0;
+	clock_gettime(CLOCK_MONOTONIC, &lastSendTime);
+
+	// Setup Sender thread
+	pthread_t tid;
+	int flag = pthread_create(&tid, /* id */
+	NULL, /* attributes */
+	send_request_on_time, NULL ); /* routine */
+
+	if (flag < 0) {
+		perror("Couldn't create thread");
 	}
-	fprintf(stderr, "Recieve a page 1 \n");
-	//now it is time to receive the page
+
+	// Recieve message code
 	memset(buf, 0, sizeof(buf));
 	int htmlstart = 0;
-	char * htmlcontent;
+	char * messageContent;
+	fprintf(stderr, "Start recv \n");
 	while ((tmpres = recv(sock, buf, BUFSIZ, 0)) > 0) {
-//	while (read(sock, buf, sizeof(buf)) > 0){
-//	while ((tmpres = recv(sock, buf, BUFSIZ, 0)) > 0) {
 		if (htmlstart == 0) {
 			/* Under certain conditions this will not work.
 			 * If the \r\n\r\n part is splitted into two messages
 			 * it will fail to detect the beginning of HTML content
 			 */
-			fprintf(stderr, "Recieve a page %s  \n", buf);
-
-			htmlcontent = strstr(buf, "\r\n\r\n");
-			if (htmlcontent != NULL ) {
+			//			fprintf(stderr, "Receive a page %s  \n", buf);
+			messageContent = strstr(buf, "\r\n\r\n");
+			if (messageContent != NULL ) {
 				htmlstart = 1;
-				htmlcontent += 4;
+				messageContent += 4;
 			}
 		} else {
-			htmlcontent = buf;
+			messageContent = buf;
 		}
 		if (htmlstart) {
-			fprintf(stdout, htmlcontent);
+			fprintf(stdout, messageContent);
 		}
 
 		memset(buf, 0, tmpres);
 	}
-	fprintf(stderr, "HTML content %s \n" , htmlcontent);
+	fprintf(stderr, "HTML content %s \n", messageContent);
 	fprintf(stderr, "Something \n");
 	if (tmpres < 0) {
 		perror("Error receiving data");
 	}
-	free(get);
 	free(remote);
 	free(ip);
 	close(sock);
